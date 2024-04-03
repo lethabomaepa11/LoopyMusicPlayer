@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://kit.fontawesome.com/d209f4817c.js" crossorigin="anonymous"></script>
+    <title>Loopy Music Player</title>
+    <style>
+        body{
+            margin: 0;
+            background: linear-gradient(to bottom,navy, steelblue,royalblue);
+            background-repeat: no-repeat;
+            background-attachment:fixed;
+            color: #fff;
+            font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+        }
+        .container
+        {
+            display: flex;
+            margin-top: 10px;
+        }
+        .list
+        {
+            width: 30%;
+            color: #000;
+            background-color: #272626;
+            border-radius: 8px;
+            padding: 20px;
+            color:#fff;
+            animation: fromLeft 0.5s ease-in-out;
+
+        }
+        .list h2
+        {
+            border-bottom: 2px solid #ffffff;
+        }
+        .item
+        {
+            display: grid;
+            grid-template-columns: 1fr 4fr 1fr;
+            align-items: center;
+            border-radius: 8px;
+            padding: 5px;
+        }
+        p
+        {
+            color: #d8d6d6;
+        }
+        .item i
+        {
+            font-size: 30px;
+        }
+
+        /** hover states**/
+        .item i:hover
+        {
+            color: #ddd;
+        }
+        .item:hover
+        {
+            background-color: rgb(70, 130, 180);
+            box-shadow: 0 2px 5px rgba(70, 130, 180.2);
+        }
+        .player
+        {
+            width: 65%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            animation: fromRight 0.5s ease-in-out;
+        }
+        .player img
+        {
+            aspect-ratio: 16/9;
+            width: 60%;
+            border-radius: 10px;
+        }
+        .player p, .player h3,.item p, .item h3
+        {
+            margin: 0;
+        }
+        .player h3
+        {
+            margin-top: 15px;
+        }
+        .player p
+        {
+            margin-top: 3px;
+        }
+        .controls
+        {
+            margin-top: 30px;
+            display: flex;
+            width: 100%;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .controls i
+        {
+            font-size: 44px;
+            margin-inline: 15px;
+        }
+        .controls i:hover{
+            color: #ddd;
+        }
+        .progressContainer
+        {
+            height: 5px;
+            width: 95%;
+            border-radius: 25px;
+            overflow-x: hidden;
+            background-color: #aaa;
+            margin-top: 20px;
+        }
+        .progressBar
+        {
+            height: 100%;
+            background-color: #fff;
+        }
+        .controls i.plusControl
+        {
+            font-size: 20px;
+        }
+        .time
+        {
+            display: flex;
+            justify-content: space-between;
+            width:95%;
+        }
+        @media screen and (max-width: 1000px) {
+
+           
+            .container
+            {
+                flex-direction: column-reverse;
+                justify-content: center;
+                align-items: center;
+            }
+            .list
+            {
+                width: 70%;
+                padding: 10px;
+                margin-top: 20px;
+            }
+        }
+
+        /* animations*/
+        @keyframes fromLeft {
+            from
+            {
+                transform: translateX(-100%);
+
+            }
+            to
+            {
+                transform: translateX(0);
+            }
+        }
+        @keyframes fromRight {
+            from
+            {
+                transform: translateX(100%);
+
+            }
+            to
+            {
+                transform: translateX(0);
+            }
+        }
+        
+    
+    </style>
+</head>
+<body>
+    <audio id="audio" autoplay controls hidden>
+    </audio>
+    <main class="container">
+        <div class="list" id="list">
+            <h2>Music Queue</h2>
+            
+        </div>
+        <div class="player">
+            <img id="songImage" src="images/two.jpeg" alt="Music image"/>
+            <h3 id="songName">Song name</h3>
+            <p id="artist">Artist name</p>
+            <div class="progressContainer">
+                <div id="progressBar" class="progressBar">
+
+                </div>
+            </div>
+            <div class="time">
+                <p id="currentTime">0:00</p>
+                <p id="duration">0:00</p>
+            </div>
+            <div class="controls">
+                <!--<i class="fa fa-shuffle plusControl" onclick="shuffle()"></i>-->
+                <i class="fa fa-caret-left" onclick="prev()"></i>
+                <i id="playPause" onclick="playPause()" class="fa fa-pause"></i>
+                <i class="fa fa-caret-right" onclick="next()"></i>
+            </div>
+        </div>
+    </main>
+    <script type="text/javascript" src="data/MusicData.js"></script>
+    <script>
+        const audio = document.getElementById("audio");
+        const songName = document.getElementById("songName");
+        const artist = document.getElementById("artist");
+        const songImage = document.getElementById("songImage");
+        const progressBar = document.getElementById("progressBar");
+        const playPauseBtn = document.getElementById("playPause");
+        const currentTime= document.getElementById("currentTime");
+        const duration = document.getElementById("duration");
+        let playing = false;
+        let linearMusic = [...music];//we are going to change music along the way
+        let currentSongId = -1;
+
+        //append the list element with the items(songs)
+       function mapList(array)
+       {
+         array.map( (song) => 
+            {
+                return document.getElementById("list").innerHTML += `
+                <div onclick=playAudio(${song.id}) class="item">
+                        <p>${song.id}</p>
+                        <span class="about">
+                            <h4>${song.name}</h4>
+                            <p>${song.artist}</p>
+                        </span>
+                        <i  class="fa fa-play"></i>
+                    </div>`;
+            });
+       }
+        //call the mapList
+        mapList(music);
+      
+        /*a shuffle function
+        function shuffle()
+        {
+            let array = [...music];
+            array = array.reverse();
+
+            for(var i = 0; i < music.length; i++)
+            {
+                let rand = Math.floor(Math.random() * array.length);
+                tempArr[i] = array[rand];
+
+            }
+            document.getElementById("list").innerHTML = "";
+            mapList(array);
+            return array;
+        }*/
+
+        function playAudio(id,array = music)
+        {
+            //set the src attribute to the song file of the given id
+            let song = array[id-1];
+            currentSongId = id;
+            let file = "music/"+song.file;
+            audio.setAttribute("src",file);
+            //song name
+            songName.textContent = song.name;
+            //song artist
+            artist.textContent = song.artist;
+            //song thumbnail
+            songImage.setAttribute("src",`images/${song.image}`);
+            playing = true;
+            progress(true);
+            playPause();
+            document.title = `Playing ${song.name} by ${song.artist}`;
+        }
+        function convertSeconds(seconds)
+        {
+            let mins = Math.floor(seconds/60);
+            seconds = Math.floor(seconds%60);
+            if(seconds<10)
+            {
+                seconds = "0"+seconds;
+            }
+
+            return `${mins}:${seconds}`;
+
+        }
+        function progress(playing)
+        {
+            if(playing)
+            {
+                setInterval(function()
+                {
+                    let time = `${(audio.currentTime/audio.duration)*100}%`;
+                    progressBar.style.width = time;
+                    currentTime.textContent = convertSeconds(audio.currentTime);
+                    duration.textContent = convertSeconds(audio.duration);
+                    if(time == "100%")
+                    {
+                        next(currentSongId);
+                        time = 0;
+                    }
+                },1000)
+            }
+            else
+            {
+                progressBar.style.width = "0%";
+            }
+        }
+
+        function next()
+        {
+            if(currentSongId == music.length)
+            {
+                playAudio(1);
+            }
+            else
+            {
+                playAudio(currentSongId+1);
+            }
+            console.log(currentSongId);
+
+        }
+
+        function prev()
+        {
+            if(currentSongId < 2)
+            {
+                playAudio(music.length);
+            }
+            else
+            {
+                playAudio(currentSongId-1);
+            }
+            console.log(currentSongId);
+            
+        }
+        
+        function playPause()
+        {
+            //for toggling the playPause button
+            !audio.paused? playPauseBtn.setAttribute("class","fa fa-play"): playPauseBtn.setAttribute("class","fa fa-pause");
+
+            //for pausing and playing the audio
+            if(currentSongId != -1)
+            {
+                !audio.paused?audio.pause():audio.play();
+                console.log(audio.paused);
+            }
+            else
+            {
+                playAudio(1);
+            }
+        }
+
+       
+
+    </script>
+    
+</body>
+</html>
